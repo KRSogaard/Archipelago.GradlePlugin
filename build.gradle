@@ -1,0 +1,79 @@
+buildscript {
+    repositories {
+        jcenter()
+        gradlePluginPortal()
+        maven { url  "http://palantir.bintray.com/releases" }
+    }
+    ext {
+        awsAccessKeyId = System.env.AWS_ACCESS_KEY_ID ?: findProperty('aws_access_key_id')
+        awsSecretAccessKey = System.env.AWS_SECRET_ACCESS_KEY ?: findProperty('aws_secret_access_key')
+    }
+}
+
+plugins {
+    id 'java-gradle-plugin'
+    id 'maven'
+    id 'maven-publish'
+}
+
+group 'build.archipelago'
+version '0.1-ALPHA'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+//    maven { url  'https://palantir.bintray.com/releases'}
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation 'commons-io:commons-io:2.6'
+
+    // Google Guava
+    implementation 'com.google.guava:guava:28.0-jre'
+
+    // Lombok
+    compile 'org.projectlombok:lombok:1.+'  // utilities for POJOs
+    annotationProcessor 'org.projectlombok:lombok:1.+'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.+'
+}
+
+//uploadArchives {
+//    repositories.mavenDeployer {
+//        repository(url: "http://nexus.prod.hulu.com/content/repositories/releases") {
+//            // fill in the empty strings with your CORP user name and password
+//            authentication(userName: '', password: '')
+//        }
+//        pom.groupId = 'build.archipelago'
+//        pom.artifactId = 'ArchipelagoPlugin'
+//        pom.version = '1.0'
+//        pom.packaging = 'jar'
+//    }
+//}
+//uploadArchives {
+//    repositories {
+//        mavenDeployer {
+//            repository(url: mavenLocal().url)
+//        }
+//    }
+//}
+
+publishing {
+    repositories {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
+
+        maven {
+            url = "s3://repo.archipelago.build/releases"
+            credentials(AwsCredentials) {
+                accessKey = awsAccessKeyId
+                secretKey = awsSecretAccessKey
+            }
+        }
+    }
+}
